@@ -14,6 +14,6 @@ RUN dnf update -y && dnf install git python38 python3-pip -y
 RUN pip3 install --no-cache-dir archspec
 RUN dnf clean all
 
-RUN useradd afd-side-car
-USER afd-side-car
+# RUN useradd afd-side-car
+USER root
 ENTRYPOINT ["/usr/bin/archspec-feature-discovery"]

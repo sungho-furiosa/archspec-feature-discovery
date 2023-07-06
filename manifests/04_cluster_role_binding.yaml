@@ -8,10 +8,9 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
   name: archspec-feature-discovery
-  namespace: archspec-feature-discovery
 subjects:
 - kind: ServiceAccount
   name: archspec-feature-discovery
   namespace: archspec-feature-discovery
-userNames:
-- system:serviceaccount:archspec-feature-discovery:archspec-feature-discovery
+# userNames:
+# - system:serviceaccount:archspec-feature-discovery:archspec-feature-discovery

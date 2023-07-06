@@ -16,13 +16,15 @@ spec:
         app.kubernetes.io/name: archspec-feature-discovery
     spec:
       containers:
-        - image: quay.io/eduardoarango/archspec-feature-discovery:latest
+        - image: cwsungho/archspec-feature-discovery:latest
           name: archspec-feature-discovery
           volumeMounts:
             - name: output-dir
               mountPath: "/etc/kubernetes/node-feature-discovery/features.d"
           securityContext:
             privileged: true
+            capabilities:
+              add: ["SYS_ADMIN"]
       serviceAccount: archspec-feature-discovery
       volumes:
         - name: output-dir
