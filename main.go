@@ -27,6 +27,7 @@ import (
 	"strings"
 	"syscall"
 	"time"
+	"regexp"
 
 	"github.com/docopt/docopt-go"
 	"github.com/klauspost/cpuid"
@@ -83,6 +84,31 @@ func getMicroArch() (string, error) {
 	arch := string(stdout)
 
 	return strings.TrimSpace(arch), nil
+}
+
+func convertFormat(str string) (string) {
+	regex := regexp.MustCompile(`[^a-zA-Z0-9-\.]`)
+	replacedStr := regex.ReplaceAllString(str, "_")
+
+	return replacedStr
+}
+
+func getBoard() (string, string, error) {
+
+	cat, err := exec.LookPath("cat")
+	if err != nil {
+		return "", "", err
+	}
+
+	board_name_cmd := exec.Command(cat, []string{"/sys/class/dmi/id/board_name"}...)
+	board_name_stdout, _ := board_name_cmd.Output()
+	board_name := string(board_name_stdout)
+
+	board_vendor_cmd := exec.Command(cat, []string{"/sys/class/dmi/id/board_vendor"}...)
+	board_vendor_stdout, _ := board_vendor_cmd.Output()
+	board_vendor := string(board_vendor_stdout)
+
+	return convertFormat(strings.TrimSpace(board_name)), convertFormat(strings.TrimSpace(board_vendor)), nil
 }
 
 func (conf *Conf) getConfFromArgv(argv []string) {
@@ -186,11 +212,19 @@ L:
 			return fmt.Errorf("Fail to retrieve MicroArch info from Spack: %v", err)
 		}
 
+		board_name, board_vendor, err := getBoard()
+		if err != nil {
+			return fmt.Errorf("Fail to retrieve MicroArch info from Spack: %v", err)
+		}
+
 		log.Print("Writing labels to output file")
+		fmt.Fprintf(tmpOutputFile, "archspec.io/cpu.name=%s\n", convertFormat(cpuid.CPU.BrandName))
 		fmt.Fprintf(tmpOutputFile, "archspec.io/cpu.vendor=%s\n", cpuid.CPU.VendorString)
 		fmt.Fprintf(tmpOutputFile, "archspec.io/cpu.model=%d\n", cpuid.CPU.Model)
 		fmt.Fprintf(tmpOutputFile, "archspec.io/cpu.family=%d\n", cpuid.CPU.Family)
 		fmt.Fprintf(tmpOutputFile, "archspec.io/cpu.target=%s\n", arch)
+		fmt.Fprintf(tmpOutputFile, "archspec.io/board.name=%s\n", board_name)
+		fmt.Fprintf(tmpOutputFile, "archspec.io/board.vendor=%s\n", board_vendor)
 
 		err = tmpOutputFile.Chmod(0644)
 		if err != nil {
